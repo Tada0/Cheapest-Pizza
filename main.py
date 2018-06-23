@@ -1,7 +1,9 @@
 import pygame
 from Interface import Input_Box, Button, TickBox
 from Graphics import Color_Handler, Image_Handler
-from Mechanics import Pizza_Options, Url_Getter, Url_Parser
+from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restaurant_Struct
+import re
+import time
 
 pygame.init()
 
@@ -143,10 +145,10 @@ def program_menu():
 
     pizza_options = Pizza_Options.PizzaOptions()
 
-    input_box1 = Input_Box.InputBox(460, 200, 30, 620, '', 'String')
-    input_box2 = Input_Box.InputBox(460, 250, 30, 620, '', 'String')
-    input_box3 = Input_Box.InputBox(1220, 250, 2, 50, '', 'Number')
-    input_box4 = Input_Box.InputBox(1320, 250, 2, 50, '', 'Number')
+    input_box1 = Input_Box.InputBox(460, 200, 30, 620, 'Krakow', 'String')
+    input_box2 = Input_Box.InputBox(460, 250, 30, 620, 'Dobrego Pasterza 48', 'String')
+    input_box3 = Input_Box.InputBox(1220, 250, 2, 50, '23', 'Number')
+    input_box4 = Input_Box.InputBox(1320, 250, 2, 50, '32', 'Number')
     input_boxes = [input_box1, input_box2, input_box3, input_box4]
 
     button1 = Button.Button(560, 820, 300, 58, 'Search', 50, Button.Button.button_func_ret_Search())
@@ -186,7 +188,7 @@ def program_menu():
     tick_box24 = TickBox.TickBox(1440, 650)
 
     # UI
-    tick_box25 = TickBox.TickBox(1320, 750)
+    tick_box25 = TickBox.TickBox(1320, 750, True)
 
     tick_boxes = [tick_box1, tick_box2, tick_box3, tick_box4, tick_box5, tick_box6,
                   tick_box7, tick_box8, tick_box9, tick_box10, tick_box11, tick_box12,
@@ -275,7 +277,34 @@ def program_main(pizza_options):
 
     # PARSING DATA
 
-    parsed_url = Url_Parser.Url_Parser(main_url)
+    pizzerias = []
+
+    parsed_main_url = Url_Parser.Url_Parser(main_url)
+
+    pizzerias_metadata = re.findall(
+        r'<div class="restaurant grid"(.*?)</div>\\n\\t\\t</div>\\n\\t</div>\\n\\t</div>\\n\\n', str(parsed_main_url))
+    selected = 0
+    pizzerias_found = len(pizzerias_metadata)
+    for metadata in pizzerias_metadata:
+        chosen = Replacer.Uni_Replacer(re.search(r'<div class="open">(.*?)</div>', metadata).group(1))
+        if pizza_options.only_opened and chosen != '':
+            continue
+        else:
+            name = Replacer.Uni_Replacer(re.search(r'<a class="restaurantname(.*?)/a>', metadata).group(1))
+            products = Replacer.Uni_Replacer(
+                re.search(r'<div class="kitchens">\\n\\t\\t\\t<span>(.*?)</span>', metadata).group(1))
+            if 'izz' in name or 'izz' in products:
+                link = 'http://www.pyszne.pl' + Replacer.Uni_Replacer(re.search(r'href="(.*?)"', name).group(1))
+                min_order = Replacer.Uni_Replacer(re.search(r'<div class="min-order">(.*?)</div>', metadata).group(1))
+                delivery = Replacer.Uni_Replacer(
+                    re.search(r'<div class="open">(.*?)<div class="min-order', metadata).group(1))
+                delivery = Replacer.Uni_Replacer(re.search(r'<div class="delivery">(.*?)</div>', delivery).group(1))
+                name = Replacer.Uni_Replacer(re.search(r'itemprop="name">(.*?)<', name).group(1))[18:-12]
+                pizzerias.append(Restaurant_Struct.RestaurantStruct(name, link, min_order, delivery))
+
+    # BY THIS POINT WE HAVE THE LIST OF PIZZERIAS WE WANT TO CHECK
+
+    print(pizzerias[0].link)
 
     # BY THIS POINT, DATA IS GATHERED
 

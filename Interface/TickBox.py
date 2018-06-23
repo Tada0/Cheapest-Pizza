@@ -4,12 +4,12 @@ from Graphics import Image_Handler, Color_Handler
 
 class TickBox:
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, start_value=False):
 
         self.x = x
         self.y = y
         self.rect = pygame.Rect(x, y, 32, 32)
-        self.active = False
+        self.active = start_value
         self.tick_image = Image_Handler.get_image('tick')
         self.color = Color_Handler.Color('BLACK')
 

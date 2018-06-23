@@ -3,10 +3,10 @@ import urllib.parse
 import re
 
 
-def Url_Parser(url, values=None):
+def Url_Parser(url, values={}):
     data = urllib.parse.urlencode(values)
     data = data.encode('utf-8')
     req = urllib.request.Request(url, data)
     resp = urllib.request.urlopen(req)
     respData = resp.read()
-    return respData.decode('utf-8')
+    return respData
