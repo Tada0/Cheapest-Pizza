@@ -1,7 +1,7 @@
 import pygame
 from Interface import Input_Box, Button, TickBox
 from Graphics import Color_Handler, Image_Handler
-from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restaurant_Struct
+from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restaurant_Struct, Meal, Check_Price
 import re
 import time
 
@@ -42,9 +42,7 @@ def program_menu():
         text = pygame.font.Font(font, 30).render("Toppings", True, Color_Handler.Color('BLACK'))
         screen.blit(text, (695, 350))
         text = pygame.font.Font(font, 30).render("cm", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1385, 250))
-        text = pygame.font.Font(font, 30).render("-", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1280, 250))
+        screen.blit(text, (1300, 250))
         text = pygame.font.Font(font, 30).render("Search only in currently opened pizzerias", True,
                                                  Color_Handler.Color('BLACK'))
         screen.blit(text, (220, 750))
@@ -109,8 +107,7 @@ def program_menu():
         screen.blit(text, (1150, 650))
 
     def data_process(options):
-        options.size_min = int(input_box3.text)
-        options.size_max = int(input_box4.text)
+        options.size = int(input_box3.text)
         options.city = input_box1.text
         options.address = input_box2.text
         options.toppings_table = [tick_boxes[x].active for x in range(24)]
@@ -124,9 +121,8 @@ def program_menu():
 
     input_box1 = Input_Box.InputBox(460, 200, 30, 620, 'Krakow', 'String')
     input_box2 = Input_Box.InputBox(460, 250, 30, 620, 'Dobrego Pasterza 48', 'String')
-    input_box3 = Input_Box.InputBox(1220, 250, 2, 50, '23', 'Number')
-    input_box4 = Input_Box.InputBox(1320, 250, 2, 50, '32', 'Number')
-    input_boxes = [input_box1, input_box2, input_box3, input_box4]
+    input_box3 = Input_Box.InputBox(1240, 250, 2, 50, '45', 'Number')
+    input_boxes = [input_box1, input_box2, input_box3]
 
     button1 = Button.Button(560, 820, 300, 58, 'Search', 50, Button.Button.button_func_ret_Search())
     button2 = Button.Button(880, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
@@ -228,8 +224,9 @@ def program_menu():
 
 
 def program_main(pizza_options):
-
-    print(pizza_options.toppings_table)
+    pizza_toppings = [Pizza_Options.PizzaOptions.toppings[x] for x in range(len(pizza_options.toppings_table)) if
+                      pizza_options.toppings_table[x]]
+    pizza_size = pizza_options.size
 
     # SHOW WAITING INFO
     screen.blit(background_image, (0, 0))
@@ -280,14 +277,154 @@ def program_main(pizza_options):
                     re.search(r'<div class="open">(.*?)<div class="min-order', metadata).group(1))
                 delivery = Replacer.Uni_Replacer(re.search(r'<div class="delivery">(.*?)</div>', delivery).group(1))
                 name = Replacer.Uni_Replacer(re.search(r'itemprop="name">(.*?)<', name).group(1))[18:-12]
-                pizzerias.append(Restaurant_Struct.RestaurantStruct(name, link, min_order, delivery))
+                id = Replacer.Uni_Replacer(re.search(r'id="irestaurant(.*?)"', metadata).group(1))
+                pizzerias.append(Restaurant_Struct.RestaurantStruct(name, link, min_order, delivery, id))
 
     # BY THIS POINT WE HAVE THE LIST OF PIZZERIAS WE WANT TO CHECK
 
     for i in range(len(pizzerias)):
-        pass
+        parsed_url = Url_Parser.Url_Parser(pizzerias[i].link)
+        pizzerias[i].parsed_url = str(parsed_url)
+        categories = re.search(r'<ul class="menu-category-list">(.*?)</ul>', str(parsed_url)).group(1)
+        categories = re.findall(r'<a href="#(.*?)"', categories)
 
-    # BY THIS POINT, DATA IS GATHERED
+        temp = []
+        for category in categories:
+            if 'Pizza' in category:
+                temp.append(category)
+        if len(temp) > 0:
+            pizzerias[i].categories = temp
+
+    # BY NOW WE GOT PIZZERIAS CATEGORIES
+
+    temp = []
+    for pizzeria in pizzerias:
+        if pizzeria.categories:
+            temp.append(pizzeria)
+    pizzerias = temp
+
+    # BY NOW PIZZERIAS WITH NO CORRESPONDING CATEGORIES ARE REMOVED
+
+    for i in range(len(pizzerias)):
+        sections = ''
+        for j in range(len(pizzerias[i].categories)):
+            meals_metadata = re.search(
+                r'anchor-id="' + re.escape(pizzerias[i].categories[j]) + r'(.*?)<div class="menu-meals-group"',
+                pizzerias[i].parsed_url)
+            if meals_metadata:
+                meals_metadata = meals_metadata.group(1)
+                sections = sections + meals_metadata
+        pizzerias[i].section = sections
+
+    # BY NOW SECTIONS ARE ESTABLISHED
+
+    temp = []
+    for pizzeria in pizzerias:
+        if pizzeria.section:
+            temp.append(pizzeria)
+    pizzerias = temp
+
+    # BY NOW EMPTY SECTIONS ARE ELIMINATED
+
+    for pizzeria in pizzerias:
+        pizzeria.meals_raw = re.findall(
+            r'<div class="meal" id="(.*?)</button>\\n\\t\\t\\t {4}</div>',
+            pizzeria.section)
+
+    # RAW MEALS DATA EXTRACTED
+
+    for pizzeria in pizzerias:
+
+        for raw_meal in pizzeria.meals_raw:
+
+            id = re.search(r'(.*?)" itemscope itemtype="', raw_meal)
+            if id:
+                id = Replacer.Uni_Replacer(id.group(1))
+
+            name = re.search(r'<span class="meal-name" itemprop="name">\\n {8}(.*?) {6}</span>', raw_meal)
+            if name:
+                name = Replacer.Uni_Replacer(name.group(1))
+
+            toppings = re.search(r'<div class="meal-description-additional-info" itemprop="description">(.*?)</div>',
+                                 raw_meal)
+            if toppings:
+                toppings = Replacer.Uni_Replacer(toppings.group(1))
+
+            sizes = re.search(r'<div class="meal-description-choose-from">(.*?)</div>', raw_meal)
+            if sizes:
+                sizes = Replacer.Uni_Replacer(sizes.group(1))
+                sizes = re.findall('\d+', sizes)
+                sizes = [int(x) for x in sizes]
+
+            # COMPARISON WITH USER INPUT SIZE AND TOPPINGS
+
+            Toppings_flag = True
+
+            for topping in pizza_toppings:
+                if toppings:
+                    if topping not in toppings:
+                        Toppings_flag = False
+
+            if sizes:
+                Size_flags = [True for _ in range(len(sizes))]
+
+            if sizes:
+                for x in range(len(sizes)):
+                    if pizza_size != sizes[x]:
+                        Size_flags[x] = False
+
+            if sizes:
+                Size_flag = any(Size_flags)
+
+            if sizes:
+                if Size_flag and Toppings_flag:
+                    pizzeria.meals.append(Meal.Meal(name, toppings, pizza_size, id, pizzeria))
+
+    # BY THIS POINT ALL FITTING MEALS ARE FOUND
+
+    for pizzeria in pizzerias:
+        temp = []
+        for meal in pizzeria.meals:
+            if meal.name and meal.toppings and meal.size and meal.id:
+                temp.append(meal)
+        pizzeria.meals = temp
+
+    temp = []
+    for pizzeria in pizzerias:
+        if len(pizzeria.meals) > 0:
+            temp.append(pizzeria)
+    pizzerias = temp
+
+    # BY THIS POINT ALL USELESS DATA IS FILTERED OUT
+
+    for pizzeria in pizzerias:
+        for meal in pizzeria.meals:
+            print(pizzeria.name, pizzeria.id, meal.name, meal.toppings, meal.size, meal.id)
+
+    # CHECKING THE PRICES
+
+    for pizzeria in pizzerias:
+        for meal in pizzeria.meals:
+            price_raw = Check_Price.Check_Price(pizzeria.link, meal.id, pizzeria.id, pizza_options.city,
+                                                pizza_options.address)
+            pos = price_raw.find(str(meal.size))
+            price_raw = price_raw[pos:]
+            pos = price_raw.find(' zł')
+            price_raw = price_raw[:pos]
+            pos = price_raw.find(': ')
+            price_raw = price_raw[pos + 2:]
+            price_raw = price_raw.replace(',', '.')
+            meal.price = float(price_raw)
+
+    # SORTING BY PRICE
+
+    sorted_list = [item for sublist in [pizzeria.meals for pizzeria in pizzerias] for item in sublist]
+    del pizzerias
+    sorted_list.sort(key=lambda x: x.price)
+    [print(meal.price) for meal in sorted_list]
+    [print(meal.pizzeria.name) for meal in sorted_list]
+
+    # BY THIS POINT, DATA IS READY TO SHOW :)
 
     while True:
         for event in pygame.event.get():
