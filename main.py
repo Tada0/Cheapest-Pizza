@@ -113,30 +113,7 @@ def program_menu():
         options.size_max = int(input_box4.text)
         options.city = input_box1.text
         options.address = input_box2.text
-        options.anchois = tick_box1.active
-        options.artichokes = tick_box2.active
-        options.arugula = tick_box3.active
-        options.bacon = tick_box4.active
-        options.bell_pepper = tick_box5.active
-        options.camembert = tick_box6.active
-        options.capers = tick_box7.active
-        options.chicken = tick_box8.active
-        options.corn = tick_box9.active
-        options.feta = tick_box10.active
-        options.garlic = tick_box11.active
-        options.ham = tick_box12.active
-        options.herbs = tick_box13.active
-        options.jalapeno = tick_box14.active
-        options.mozzarella = tick_box15.active
-        options.olives = tick_box16.active
-        options.onion = tick_box17.active
-        options.pineapple = tick_box18.active
-        options.portobello = tick_box19.active
-        options.salami = tick_box20.active
-        options.sausage = tick_box21.active
-        options.seafood = tick_box22.active
-        options.tomato = tick_box23.active
-        options.tuna = tick_box24.active
+        options.toppings_table = [tick_boxes[x].active for x in range(24)]
         options.only_opened = tick_box25.active
         if options.size_correct() and options.address_correct():
             return True
@@ -251,6 +228,9 @@ def program_menu():
 
 
 def program_main(pizza_options):
+
+    print(pizza_options.toppings_table)
+
     # SHOW WAITING INFO
     screen.blit(background_image, (0, 0))
     text = pygame.font.Font(font, 50).render("Searching for the cheapest pizza...", True, Color_Handler.Color('BLACK'))
@@ -304,7 +284,8 @@ def program_main(pizza_options):
 
     # BY THIS POINT WE HAVE THE LIST OF PIZZERIAS WE WANT TO CHECK
 
-    print(pizzerias[0].link)
+    for i in range(len(pizzerias)):
+        pass
 
     # BY THIS POINT, DATA IS GATHERED
 

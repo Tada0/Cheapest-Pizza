@@ -1,33 +1,38 @@
 class PizzaOptions:
+
+    toppings = {
+        0: 'anchois',
+        1: 'karczochy',
+        2: 'rukola',
+        3: 'boczek',
+        4: 'papryka',
+        5: 'camembert',
+        6: 'kapary',
+        7: 'kurczak',
+        8: 'kukurydza',
+        9: 'feta',
+        10: 'czosnek',
+        11: 'szynka',
+        12: 'zioła',
+        13: 'jalapeno',
+        14: 'mozzarella',
+        15: 'oliwki',
+        16: 'cebula',
+        17: 'ananas',
+        18: 'pieczarki',
+        19: 'salami',
+        20: 'kiełbasa',
+        21: 'owoce morza',
+        22: 'pomidor',
+        23: 'tuńczyk',
+    }
+
     def __init__(self):
         self.city = None
         self.address = None
         self.size_min = None
         self.size_max = None
-        self.anchois = False
-        self.artichokes = False
-        self.arugula = False
-        self.bacon = False
-        self.bell_pepper = False
-        self.camembert = False
-        self.capers = False
-        self.chicken = False
-        self.corn = False
-        self.feta = False
-        self.garlic = False
-        self.ham = False
-        self.herbs = False
-        self.jalapeno = False
-        self.mozzarella = False
-        self.olives = False
-        self.onion = False
-        self.pineapple = False
-        self.portobello = False
-        self.salami = False
-        self.sausage = False
-        self.seafood = False
-        self.tomato = False
-        self.tuna = False
+        self.toppings_table = [False for _ in range(24)]
         self.only_opened = False
 
     def size_correct(self):
