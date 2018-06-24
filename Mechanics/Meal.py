@@ -6,4 +6,4 @@ class Meal:
         self.size = size
         self.id = id
         self.price = None
-        self.pizzeria = pizzeria
+        self.pizzeria_info = pizzeria

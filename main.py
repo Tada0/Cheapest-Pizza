@@ -1,7 +1,8 @@
 import pygame
 from Interface import Input_Box, Button, TickBox
 from Graphics import Color_Handler, Image_Handler
-from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restaurant_Struct, Meal, Check_Price, List_Handler
+from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restaurant_Struct, Meal, Check_Price, \
+    List_Handler
 import re
 import time
 import threading
@@ -225,7 +226,6 @@ def program_menu():
 
 
 def program_main(pizza_options):
-
     pizza_toppings = [Pizza_Options.PizzaOptions.toppings[x] for x in range(len(pizza_options.toppings_table)) if
                       pizza_options.toppings_table[x]]
     pizza_size = pizza_options.size
@@ -377,7 +377,7 @@ def program_main(pizza_options):
 
                 if sizes:
                     if Size_flag and Toppings_flag:
-                        pizzeria.meals.append(Meal.Meal(name, toppings, pizza_size, id, pizzeria))
+                        pizzeria.meals.append(Meal.Meal(name, toppings, pizza_size, id, Restaurant_Struct.RestaurantInfo(pizzeria.name, pizzeria.link, pizzeria.min_order, pizzeria.delivery)))
 
         # BY THIS POINT ALL FITTING MEALS ARE FOUND
 
@@ -396,10 +396,6 @@ def program_main(pizza_options):
 
         # BY THIS POINT ALL USELESS DATA IS FILTERED OUT
 
-        for pizzeria in pizzerias:
-            for meal in pizzeria.meals:
-                print(pizzeria.name, pizzeria.id, meal.name, meal.toppings, meal.size, meal.id)
-
         # CHECKING THE PRICES
 
         for pizzeria in pizzerias:
@@ -413,15 +409,23 @@ def program_main(pizza_options):
                 pos = price_raw.find(': ')
                 price_raw = price_raw[pos + 2:]
                 price_raw = price_raw.replace(',', '.')
-                meal.price = float(price_raw)
+                try:
+                    meal.price = float(price_raw)
+                except Exception as e:
+                    print(e)
+                    get_data(list_obj)
+                    break
 
         # SORTING BY PRICE
 
         sorted_list = [item for sublist in [pizzeria.meals for pizzeria in pizzerias] for item in sublist]
-        del pizzerias
         sorted_list.sort(key=lambda x: x.price)
-        list_obj.list = sorted_list
-        print("Completed")
+        if len(sorted_list) > 0:
+            list_obj.list = sorted_list
+            print("Searching Completed")
+        else:
+            list_obj.list = 'Empty'
+            print("Empty")
 
         # BY THIS POINT, DATA IS READY TO SHOW :)
 
@@ -450,13 +454,15 @@ def program_main(pizza_options):
                                                      Color_Handler.Color('BLACK'))
             screen.blit(text, (510, 470))
         else:
-            screen.blit(background_image, (0, 0))
-            text = pygame.font.Font(font, 50).render("Found", True,
-                                                     Color_Handler.Color('BLACK'))
+            show_results(list_object.list)
 
         pygame.display.flip()
         pygame.display.update()
         clock.tick(60)
+
+
+def show_results(pizzas_sorted):
+    print(pizzas_sorted[0].pizzeria_info.name, pizzas_sorted[0].name, pizzas_sorted[0].toppings, pizzas_sorted[0].price)
 
 
 def program_end():

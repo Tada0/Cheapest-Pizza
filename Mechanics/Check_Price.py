@@ -24,6 +24,7 @@ def Check_Price(url, meal_id, restaurant_id, city, address):
         driver.find_element_by_id('isizeselection').click()
         time.sleep(1)
         ret_val = driver.find_element_by_id('isizeselection').text
+        time.sleep(1)
     except Exception as e:
         return 'Error occured while searching for price'
     driver.quit()

@@ -1,4 +1,3 @@
-
 class RestaurantStruct:
     def __init__(self, name, link, min_order, delivery, id):
         self.name = name
@@ -12,3 +11,11 @@ class RestaurantStruct:
         self.section = None
         self.meals_raw = None
         self.meals = []
+
+
+class RestaurantInfo:
+    def __init__(self, name, link, min_order, delivery):
+        self.name = name
+        self.link = link
+        self.min_order = min_order
+        self.delivery = delivery
