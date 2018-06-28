@@ -7,7 +7,10 @@ class ButtonFunctions(Enum):
     QUIT = 1
     SEARCH = 2
     MENU = 3
-    EXIT = 4
+    AGAIN = 4
+    LEFT = 5
+    RIGHT = 6
+    EXIT = 7
 
 
 class Button:
@@ -28,7 +31,19 @@ class Button:
     def button_func_ret_Exit():
         return ButtonFunctions.EXIT
 
-    def __init__(self, x, y, w, h, text, text_size, functionality):
+    @staticmethod
+    def button_func_ret_Again():
+        return ButtonFunctions.AGAIN
+
+    @staticmethod
+    def button_func_ret_Left():
+        return ButtonFunctions.LEFT
+
+    @staticmethod
+    def button_func_ret_Right():
+        return ButtonFunctions.RIGHT
+
+    def __init__(self, x, y, w, h, text, text_size, functionality, imgs=None):
 
         self.x = x
         self.y = y
@@ -41,6 +56,12 @@ class Button:
         self.color_2 = Color("BLACK")
         self.color_1 = Color("WHITE")
         self.text_size = text_size
+        self.imgs = imgs
+
+        if self.imgs:
+            self.show_img = self.imgs[0]
+        else:
+            self.show_img = None
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -51,12 +72,19 @@ class Button:
 
     def update(self):
         if self.rect.collidepoint(pygame.mouse.get_pos()):
+            if self.show_img:
+                self.show_img = self.imgs[1]
             self.color = self.color_1
         else:
+            if self.show_img:
+                self.show_img = self.imgs[0]
             self.color = self.color_2
 
     def show(self, screen):
-        # pygame.draw.rect(screen, Color("RED"), self.rect) # For debugging
-        # Draw button text
-        text = pygame.font.Font(self.font, self.text_size).render(self.text, True, self.color)
-        screen.blit(text, (self.x, self.y))
+        # pygame.draw.rect(screen, Color("RED"), self.rect)  # For debugging
+        # Draw button
+        if self.show_img:
+            screen.blit(self.show_img, (self.x, self.y))
+        else:
+            text = pygame.font.Font(self.font, self.text_size).render(self.text, True, self.color)
+            screen.blit(text, (self.x, self.y))

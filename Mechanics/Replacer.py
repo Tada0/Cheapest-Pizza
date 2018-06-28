@@ -1,4 +1,3 @@
-
 def Uni_Replacer(string):
     replacements = {
         '\\xc4\\x84': 'Ą',
@@ -18,7 +17,37 @@ def Uni_Replacer(string):
         '\\xc3\\xb3': 'ó',
         '\\xc5\\x9b': 'ś',
         '\\xc5\\xba': 'ź',
-        '\\xc5\\xbc': 'ż',
+        '\\xc5\\xbc': 'ż'
+    }
+
+    work_text = string
+
+    for k, v in replacements.items():
+        work_text = work_text.replace(k, v)
+
+    return work_text
+
+
+def Pl_Replacer(string):
+    replacements = {
+        'ą': 'a',
+        'ć': 'c',
+        'ę': 'e',
+        'ł': 'l',
+        'ń': 'n',
+        'ó': 'o',
+        'ś': 's',
+        'ź': 'z',
+        'ż': 'z',
+        'Ą': 'a',
+        'Ć': 'c',
+        'Ę': 'e',
+        'Ł': 'l',
+        'Ń': 'n',
+        'Ó': 'o',
+        'Ś': 's',
+        'Ź': 'z',
+        'Ż': 'z'
     }
 
     work_text = string

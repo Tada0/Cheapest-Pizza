@@ -6,6 +6,9 @@ from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restauran
 import re
 import time
 import threading
+import multiprocessing
+import urllib
+import os
 
 pygame.init()
 
@@ -232,6 +235,8 @@ def program_main(pizza_options):
 
     list_object = List_Handler.List_Handler()
 
+    loading_pictures = [Image_Handler.get_image('loading_' + str(num)) for num in range(12)]
+
     def get_data(list_obj):
         # GETTING PROPER URL
         wait_time = 2
@@ -288,12 +293,16 @@ def program_main(pizza_options):
 
             temp = []
             for category in categories:
-                if 'Pizza' in category:
+                if 'izz' in category:
                     temp.append(category)
             if len(temp) > 0:
                 pizzerias[i].categories = temp
 
         # BY NOW WE GOT PIZZERIAS CATEGORIES
+
+        # GETTING LOGO URL
+        for pizzeria in pizzerias:
+            pizzeria.image_link = 'http://' + re.search(r'<div class="restaurant-logo">\\n {2}<img src="//(.*?) alt', str(pizzeria.parsed_url)).group(1)[:-1]
 
         temp = []
         for pizzeria in pizzerias:
@@ -377,7 +386,12 @@ def program_main(pizza_options):
 
                 if sizes:
                     if Size_flag and Toppings_flag:
-                        pizzeria.meals.append(Meal.Meal(name, toppings, pizza_size, id, Restaurant_Struct.RestaurantInfo(pizzeria.name, pizzeria.link, pizzeria.min_order, pizzeria.delivery)))
+                        pizzeria.meals.append(Meal.Meal(name, toppings, pizza_size, id,
+                                                        Restaurant_Struct.RestaurantInfo(pizzeria.name, pizzeria.link,
+                                                                                         pizzeria.min_order,
+                                                                                         pizzeria.delivery,
+                                                                                         pizzeria.id,
+                                                                                         pizzeria.image_link)))
 
         # BY THIS POINT ALL FITTING MEALS ARE FOUND
 
@@ -398,27 +412,71 @@ def program_main(pizza_options):
 
         # CHECKING THE PRICES
 
-        for pizzeria in pizzerias:
-            for meal in pizzeria.meals:
-                price_raw = Check_Price.Check_Price(pizzeria.link, meal.id, pizzeria.id, pizza_options.city,
-                                                    pizza_options.address)
-                pos = price_raw.find(str(meal.size))
-                price_raw = price_raw[pos:]
-                pos = price_raw.find(' zł')
-                price_raw = price_raw[:pos]
-                pos = price_raw.find(': ')
-                price_raw = price_raw[pos + 2:]
+        cpus = multiprocessing.cpu_count() - 2
+
+        if cpus == 0:
+            for pizzeria in pizzerias:
+                for meal in pizzeria.meals:
+                    price_raw = Check_Price.Check_Price(pizzeria.link, meal.id, pizzeria.id, pizza_options.city,
+                                                        pizza_options.address)
+                    price_raw = price_raw.replace(',', '.')
+                    numbers = [float(s) for s in re.findall(r'-?\d+\.?\d*', price_raw)]
+                    prices = []
+                    sizes = []
+                    for i in range(0, len(numbers), 2):
+                        sizes.append(numbers[i])
+                        prices.append(numbers[i + 1])
+                    for i in range(len(sizes)):
+                        if pizza_size == sizes[i]:
+                            final_price_pos = i
+                    if len(prices) > 0:
+                        meal.price = prices[final_price_pos]
+        else:
+            def look_for_price(meal, city, address):
+                price_raw = Check_Price.Check_Price(meal.pizzeria_info.link, meal.id, meal.pizzeria_info.id, city,
+                                                    address)
                 price_raw = price_raw.replace(',', '.')
-                try:
-                    meal.price = float(price_raw)
-                except Exception as e:
-                    print(e)
-                    get_data(list_obj)
-                    break
+                numbers = [float(s) for s in re.findall(r'-?\d+\.?\d*', price_raw)]
+                prices = []
+                sizes = []
+                for i in range(0, len(numbers), 2):
+                    sizes.append(numbers[i])
+                    prices.append(numbers[i + 1])
+                for i in range(len(sizes)):
+                    if pizza_size == sizes[i]:
+                        final_price_pos = i
+                if len(prices) > 0:
+                    meal.price = prices[final_price_pos]
+
+            threaded_meals = []
+            for pizzeria in pizzerias:
+                for meal in pizzeria.meals:
+                    threaded_meals.append(meal)
+
+            threaded_meals = [threaded_meals[i:i + cpus] for i in range(0, len(threaded_meals), cpus)]
+
+            for x in range(len(threaded_meals)):
+                thread_jobs = []
+                for y in range(len(threaded_meals[x])):
+                    thread_jobs.append(
+                        threading.Thread(target=look_for_price, args=(threaded_meals[x][y], pizza_options.city,
+                                                                      pizza_options.address)))
+                for thread in thread_jobs:
+                    thread.start()
+
+                while True:
+                    if not any([thread.is_alive() for thread in thread_jobs]):
+                        break
 
         # SORTING BY PRICE
 
-        sorted_list = [item for sublist in [pizzeria.meals for pizzeria in pizzerias] for item in sublist]
+        sorted_list = []
+
+        for pizzeria in pizzerias:
+            for meal in pizzeria.meals:
+                if meal.price is not None:
+                    sorted_list.append(meal)
+
         sorted_list.sort(key=lambda x: x.price)
         if len(sorted_list) > 0:
             list_obj.list = sorted_list
@@ -433,6 +491,56 @@ def program_main(pizza_options):
 
     thread1 = threading.Thread(target=get_data, args=(list_object,))
     thread1.start()
+    loading_counter = 2
+    loading_num = 0
+
+    while True:
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                os._exit(0)
+
+        # UPDATE STUFF
+
+        # SHOW STUFF
+
+        if thread1.is_alive():
+            #  Animation here
+            screen.blit(background_image, (0, 0))
+            text = pygame.font.Font(font, 50).render("Searching for the cheapest pizza...", True,
+                                                     Color_Handler.Color('BLACK'))
+            screen.blit(text, (75, 300))
+            text = pygame.font.Font(font, 30).render("(This might take a while)", True,
+                                                     Color_Handler.Color('BLACK'))
+            screen.blit(text, (510, 370))
+
+            screen.blit(loading_pictures[loading_num], (700, 500))
+            loading_counter -= 1
+            if loading_counter == 0:
+                loading_counter = 2
+                loading_num += 1
+                if loading_num == 12:
+                    loading_num = 0
+
+        else:
+            if list_object.list == 'Empty':
+                if no_pizzas_found():
+                    return True, 'Menu'
+            else:
+                if show_results(list_object.list):
+                    return True, 'Menu'
+
+        pygame.display.flip()
+        pygame.display.update()
+        clock.tick(60)
+
+
+def no_pizzas_found():
+
+    button1 = Button.Button(500, 820, 400, 58, 'Try Again', 50, Button.Button.button_func_ret_Again())
+    button2 = Button.Button(940, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
+    buttons = [button1, button2]
 
     while True:
         for event in pygame.event.get():
@@ -441,20 +549,32 @@ def program_main(pizza_options):
                 pygame.quit()
                 quit()
 
+            for button in buttons:
+
+                ret_val = button.handle_event(event)
+
+                if ret_val == Button.ButtonFunctions.EXIT:
+                    pygame.quit()
+                    quit()
+
+                elif ret_val == Button.ButtonFunctions.AGAIN:
+                    return True
+
         # UPDATE STUFF
+
+        for button in buttons:
+            button.update()
 
         # SHOW STUFF
 
-        if not list_object.list:
-            screen.blit(background_image, (0, 0))
-            text = pygame.font.Font(font, 50).render("Searching for the cheapest pizza...", True,
-                                                     Color_Handler.Color('BLACK'))
-            screen.blit(text, (75, 400))
-            text = pygame.font.Font(font, 30).render("(This might take a while)", True,
-                                                     Color_Handler.Color('BLACK'))
-            screen.blit(text, (510, 470))
-        else:
-            show_results(list_object.list)
+        screen.blit(background_image, (0, 0))
+
+        text = pygame.font.Font(font, 50).render("No pizzas found :(", True,
+                                                 Color_Handler.Color('BLACK'))
+        screen.blit(text, (450, 400))
+
+        for button in buttons:
+            button.show(screen)
 
         pygame.display.flip()
         pygame.display.update()
@@ -462,7 +582,84 @@ def program_main(pizza_options):
 
 
 def show_results(pizzas_sorted):
-    print(pizzas_sorted[0].pizzeria_info.name, pizzas_sorted[0].name, pizzas_sorted[0].toppings, pizzas_sorted[0].price)
+
+    meal_to_show = 0
+
+    button1 = Button.Button(500, 520, 170, 108, '', 20, Button.Button.button_func_ret_Left(), (Image_Handler.get_image('left_arrow_black'), Image_Handler.get_image('left_arrow_white')))
+    button2 = Button.Button(800, 520, 170, 108, '', 20, Button.Button.button_func_ret_Right(), (Image_Handler.get_image('right_arrow_black'), Image_Handler.get_image('right_arrow_white')))
+    button3 = Button.Button(420, 820, 490, 58, 'Check Again', 50, Button.Button.button_func_ret_Again())
+    button4 = Button.Button(960, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
+    buttons = [button1, button2, button3, button4]
+
+    while True:
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            for button in buttons:
+                ret_val = button.handle_event(event)
+
+                if ret_val == Button.ButtonFunctions.EXIT:
+                    pygame.quit()
+                    quit()
+
+                elif ret_val == Button.ButtonFunctions.AGAIN:
+                    return True
+
+                elif ret_val == Button.ButtonFunctions.LEFT:
+                    if meal_to_show != 0:
+                        meal_to_show -= 1
+
+                        with open('Graphics/Images/current_restaurant.png', 'wb') as f:
+                            req = urllib.request.Request(
+                                pizzas_sorted[meal_to_show].pizzeria_info.image_link,
+                                headers={'User-Agent': 'Mozilla/5.0'})
+                            img = urllib.request.urlopen(req).read()
+                            f.write(img)
+
+                elif ret_val == Button.ButtonFunctions.RIGHT:
+                    if meal_to_show < len(pizzas_sorted) - 1:
+                        meal_to_show += 1
+
+                        with open('Graphics/Images/current_restaurant.png', 'wb') as f:
+                            req = urllib.request.Request(
+                                pizzas_sorted[meal_to_show].pizzeria_info.image_link,
+                                headers={'User-Agent': 'Mozilla/5.0'})
+                            img = urllib.request.urlopen(req).read()
+                            f.write(img)
+
+        # UPDATE STUFF
+
+        for button in buttons:
+            button.update()
+
+        # SHOW STUFF
+
+        screen.blit(background_image, (0, 0))
+
+        # PIZZERIA NAME
+        text = pygame.font.Font(font, 30).render(Replacer.Pl_Replacer(pizzas_sorted[meal_to_show].pizzeria_info.name), True,
+                                                 Color_Handler.Color('BLACK'))
+        text_width = text.get_width()
+        screen.blit(text, ((1600 - text_width)/2, 50))
+
+        # PIZZERIA LOGO
+        screen.blit(Image_Handler.get_image('current_restaurant'), (567, 100))
+
+        # PIZZA NAME
+        text = pygame.font.Font(font, 30).render(Replacer.Pl_Replacer(pizzas_sorted[meal_to_show].name), True,
+                                                 Color_Handler.Color('BLACK'))
+        text_width = text.get_width()
+        screen.blit(text, ((1600 - text_width) / 2, 500))
+
+        for button in buttons:
+            button.show(screen)
+
+        pygame.display.flip()
+        pygame.display.update()
+        clock.tick(60)
 
 
 def program_end():
@@ -484,11 +681,16 @@ if __name__ == '__main__':
                 main = True
                 end = False
         elif main:
-            main_end = program_main(pizza_options)
+            main_end, wtd = program_main(pizza_options)
             if main_end:
-                menu = False
-                main = False
-                end = True
+                if wtd == 'Menu':
+                    menu = True
+                    main = False
+                    end = False
+                else:
+                    menu = False
+                    main = False
+                    end = True
         elif end:
             end_end = program_end()
             if end_end:
