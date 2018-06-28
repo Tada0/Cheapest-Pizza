@@ -15,5 +15,3 @@ def Color(color_name):
         'GRAY': (128, 128, 128),
         'DARK_GRAY': (26, 26, 26)
     }[color_name]
-
-

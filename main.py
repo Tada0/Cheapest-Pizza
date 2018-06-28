@@ -2,13 +2,14 @@ import pygame
 from Interface import Input_Box, Button, TickBox
 from Graphics import Color_Handler, Image_Handler
 from Mechanics import Pizza_Options, Url_Getter, Url_Parser, Replacer, Restaurant_Struct, Meal, Check_Price, \
-    List_Handler
+    List_Handler, Autocomplete_Handler
 import re
 import time
 import threading
 import multiprocessing
 import urllib
 import os
+import webbrowser
 
 pygame.init()
 
@@ -48,9 +49,9 @@ def program_menu():
         screen.blit(text, (695, 350))
         text = pygame.font.Font(font, 30).render("cm", True, Color_Handler.Color('BLACK'))
         screen.blit(text, (1300, 250))
-        text = pygame.font.Font(font, 30).render("Search only in currently opened pizzerias", True,
+        text = pygame.font.Font(font, 30).render("Searching only in currently open pizzerias", True,
                                                  Color_Handler.Color('BLACK'))
-        screen.blit(text, (220, 750))
+        screen.blit(text, (240, 750))
 
         # TOPPINGS
 
@@ -116,17 +117,18 @@ def program_menu():
         options.city = input_box1.text
         options.address = input_box2.text
         options.toppings_table = [tick_boxes[x].active for x in range(24)]
-        options.only_opened = tick_box25.active
         if options.size_correct() and options.address_correct():
             return True
         else:
             return False
 
+    ac = Autocomplete_Handler.AutoCompleter().load()
+
     pizza_options = Pizza_Options.PizzaOptions()
 
-    input_box1 = Input_Box.InputBox(460, 200, 30, 620, 'Krakow', 'String')
-    input_box2 = Input_Box.InputBox(460, 250, 30, 620, 'Dobrego Pasterza 48', 'String')
-    input_box3 = Input_Box.InputBox(1240, 250, 2, 50, '45', 'Number')
+    input_box1 = Input_Box.InputBox(460, 200, 30, 620, ac.city, 'String')
+    input_box2 = Input_Box.InputBox(460, 250, 30, 620, ac.address, 'String')
+    input_box3 = Input_Box.InputBox(1240, 250, 2, 50, ac.size, 'Number')
     input_boxes = [input_box1, input_box2, input_box3]
 
     button1 = Button.Button(560, 820, 300, 58, 'Search', 50, Button.Button.button_func_ret_Search())
@@ -134,51 +136,48 @@ def program_menu():
     buttons = [button1, button2]
 
     # FIRST COLUMN
-    tick_box1 = TickBox.TickBox(400, 400)
-    tick_box2 = TickBox.TickBox(400, 450)
-    tick_box3 = TickBox.TickBox(400, 500)
-    tick_box4 = TickBox.TickBox(400, 550)
-    tick_box5 = TickBox.TickBox(400, 600)
-    tick_box6 = TickBox.TickBox(400, 650)
+    tick_box1 = TickBox.TickBox(400, 400, ac.ingredients[0])
+    tick_box2 = TickBox.TickBox(400, 450, ac.ingredients[1])
+    tick_box3 = TickBox.TickBox(400, 500, ac.ingredients[2])
+    tick_box4 = TickBox.TickBox(400, 550, ac.ingredients[3])
+    tick_box5 = TickBox.TickBox(400, 600, ac.ingredients[4])
+    tick_box6 = TickBox.TickBox(400, 650, ac.ingredients[5])
 
     # SECOND COLUMN
-    tick_box7 = TickBox.TickBox(680, 400)
-    tick_box8 = TickBox.TickBox(680, 450)
-    tick_box9 = TickBox.TickBox(680, 500)
-    tick_box10 = TickBox.TickBox(680, 550)
-    tick_box11 = TickBox.TickBox(680, 600)
-    tick_box12 = TickBox.TickBox(680, 650)
+    tick_box7 = TickBox.TickBox(680, 400, ac.ingredients[6])
+    tick_box8 = TickBox.TickBox(680, 450, ac.ingredients[7])
+    tick_box9 = TickBox.TickBox(680, 500, ac.ingredients[8])
+    tick_box10 = TickBox.TickBox(680, 550, ac.ingredients[9])
+    tick_box11 = TickBox.TickBox(680, 600, ac.ingredients[10])
+    tick_box12 = TickBox.TickBox(680, 650, ac.ingredients[11])
 
     # THIRD COLUMN
-    tick_box13 = TickBox.TickBox(1080, 400)
-    tick_box14 = TickBox.TickBox(1080, 450)
-    tick_box15 = TickBox.TickBox(1080, 500)
-    tick_box16 = TickBox.TickBox(1080, 550)
-    tick_box17 = TickBox.TickBox(1080, 600)
-    tick_box18 = TickBox.TickBox(1080, 650)
+    tick_box13 = TickBox.TickBox(1080, 400, ac.ingredients[12])
+    tick_box14 = TickBox.TickBox(1080, 450, ac.ingredients[13])
+    tick_box15 = TickBox.TickBox(1080, 500, ac.ingredients[14])
+    tick_box16 = TickBox.TickBox(1080, 550, ac.ingredients[15])
+    tick_box17 = TickBox.TickBox(1080, 600, ac.ingredients[16])
+    tick_box18 = TickBox.TickBox(1080, 650, ac.ingredients[17])
 
     # FOURTH COLUMN
-    tick_box19 = TickBox.TickBox(1440, 400)
-    tick_box20 = TickBox.TickBox(1440, 450)
-    tick_box21 = TickBox.TickBox(1440, 500)
-    tick_box22 = TickBox.TickBox(1440, 550)
-    tick_box23 = TickBox.TickBox(1440, 600)
-    tick_box24 = TickBox.TickBox(1440, 650)
-
-    # UI
-    tick_box25 = TickBox.TickBox(1320, 750, True)
+    tick_box19 = TickBox.TickBox(1440, 400, ac.ingredients[18])
+    tick_box20 = TickBox.TickBox(1440, 450, ac.ingredients[19])
+    tick_box21 = TickBox.TickBox(1440, 500, ac.ingredients[20])
+    tick_box22 = TickBox.TickBox(1440, 550, ac.ingredients[21])
+    tick_box23 = TickBox.TickBox(1440, 600, ac.ingredients[22])
+    tick_box24 = TickBox.TickBox(1440, 650, ac.ingredients[23])
 
     tick_boxes = [tick_box1, tick_box2, tick_box3, tick_box4, tick_box5, tick_box6,
                   tick_box7, tick_box8, tick_box9, tick_box10, tick_box11, tick_box12,
                   tick_box13, tick_box14, tick_box15, tick_box16, tick_box17, tick_box18,
-                  tick_box19, tick_box20, tick_box21, tick_box22, tick_box23, tick_box24, tick_box25]
+                  tick_box19, tick_box20, tick_box21, tick_box22, tick_box23, tick_box24]
 
     while True:
         for event in pygame.event.get():
 
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
+                os._exit(0)
 
             for input_box in input_boxes:
                 input_box.handle_event(event)
@@ -193,6 +192,8 @@ def program_menu():
 
                 elif ret_val == Button.ButtonFunctions.SEARCH:
                     if data_process(pizza_options):
+                        ac.insert(input_box1.text, input_box2.text, input_box3.text, [tick_box.active for tick_box in tick_boxes])
+                        ac.save()
                         return True, pizza_options
 
             for tick_box in tick_boxes:
@@ -266,9 +267,7 @@ def program_main(pizza_options):
         pizzerias_found = len(pizzerias_metadata)
         for metadata in pizzerias_metadata:
             chosen = Replacer.Uni_Replacer(re.search(r'<div class="open">(.*?)</div>', metadata).group(1))
-            if pizza_options.only_opened and chosen != '':
-                continue
-            else:
+            if chosen == '':
                 name = Replacer.Uni_Replacer(re.search(r'<a class="restaurantname(.*?)/a>', metadata).group(1))
                 products = Replacer.Uni_Replacer(
                     re.search(r'<div class="kitchens">\\n\\t\\t\\t<span>(.*?)</span>', metadata).group(1))
@@ -302,7 +301,8 @@ def program_main(pizza_options):
 
         # GETTING LOGO URL
         for pizzeria in pizzerias:
-            pizzeria.image_link = 'http://' + re.search(r'<div class="restaurant-logo">\\n {2}<img src="//(.*?) alt', str(pizzeria.parsed_url)).group(1)[:-1]
+            pizzeria.image_link = 'http://' + re.search(r'<div class="restaurant-logo">\\n {2}<img src="//(.*?) alt',
+                                                        str(pizzeria.parsed_url)).group(1)[:-1]
 
         temp = []
         for pizzeria in pizzerias:
@@ -439,14 +439,24 @@ def program_main(pizza_options):
                 numbers = [float(s) for s in re.findall(r'-?\d+\.?\d*', price_raw)]
                 prices = []
                 sizes = []
-                for i in range(0, len(numbers), 2):
-                    sizes.append(numbers[i])
-                    prices.append(numbers[i + 1])
-                for i in range(len(sizes)):
-                    if pizza_size == sizes[i]:
-                        final_price_pos = i
-                if len(prices) > 0:
-                    meal.price = prices[final_price_pos]
+                if len(numbers) % 2 == 0:
+                    for i in range(0, len(numbers), 2):
+                        sizes.append(numbers[i])
+                        prices.append(numbers[i + 1])
+                    for i in range(len(sizes)):
+                        if pizza_size == sizes[i]:
+                            final_price_pos = i
+                    if len(prices) > 0:
+                        meal.price = prices[final_price_pos]
+                elif len(numbers) % 3 == 0:
+                    for i in range(0, len(numbers), 3):
+                        sizes.append(numbers[i])
+                        prices.append(numbers[i + 2])
+                    for i in range(len(sizes)):
+                        if pizza_size == sizes[i]:
+                            final_price_pos = i
+                    if len(prices) > 0:
+                        meal.price = prices[final_price_pos]
 
             threaded_meals = []
             for pizzeria in pizzerias:
@@ -537,7 +547,6 @@ def program_main(pizza_options):
 
 
 def no_pizzas_found():
-
     button1 = Button.Button(500, 820, 400, 58, 'Try Again', 50, Button.Button.button_func_ret_Again())
     button2 = Button.Button(940, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
     buttons = [button1, button2]
@@ -547,7 +556,7 @@ def no_pizzas_found():
 
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
+                os._exit(0)
 
             for button in buttons:
 
@@ -583,20 +592,33 @@ def no_pizzas_found():
 
 def show_results(pizzas_sorted):
 
+    def get_pizzeria_logo():
+        with open('Graphics/Images/current_restaurant.png', 'wb') as f:
+            req = urllib.request.Request(
+                pizzas_sorted[meal_to_show].pizzeria_info.image_link,
+                headers={'User-Agent': 'Mozilla/5.0'})
+            img = urllib.request.urlopen(req).read()
+            f.write(img)
+
     meal_to_show = 0
 
-    button1 = Button.Button(500, 520, 170, 108, '', 20, Button.Button.button_func_ret_Left(), (Image_Handler.get_image('left_arrow_black'), Image_Handler.get_image('left_arrow_white')))
-    button2 = Button.Button(800, 520, 170, 108, '', 20, Button.Button.button_func_ret_Right(), (Image_Handler.get_image('right_arrow_black'), Image_Handler.get_image('right_arrow_white')))
-    button3 = Button.Button(420, 820, 490, 58, 'Check Again', 50, Button.Button.button_func_ret_Again())
-    button4 = Button.Button(960, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
-    buttons = [button1, button2, button3, button4]
+    get_pizzeria_logo()
+
+    button1 = Button.Button(50, 685, 170, 108, '', 20, Button.Button.button_func_ret_Left(),
+                            (Image_Handler.get_image('left_arrow_black'), Image_Handler.get_image('left_arrow_white')))
+    button2 = Button.Button(1380, 685, 170, 108, '', 20, Button.Button.button_func_ret_Right(), (
+        Image_Handler.get_image('right_arrow_black'), Image_Handler.get_image('right_arrow_white')))
+    button3 = Button.Button(450, 820, 490, 58, 'Check Again', 50, Button.Button.button_func_ret_Again())
+    button4 = Button.Button(990, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
+    button5 = Button.Button(400, 715, 820, 50, 'Order from that pizzeria', 40, Button.Button.button_func_ret_Gtw())
+    buttons = [button1, button2, button3, button4, button5]
 
     while True:
         for event in pygame.event.get():
 
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
+                os._exit(0)
 
             for button in buttons:
                 ret_val = button.handle_event(event)
@@ -612,23 +634,16 @@ def show_results(pizzas_sorted):
                     if meal_to_show != 0:
                         meal_to_show -= 1
 
-                        with open('Graphics/Images/current_restaurant.png', 'wb') as f:
-                            req = urllib.request.Request(
-                                pizzas_sorted[meal_to_show].pizzeria_info.image_link,
-                                headers={'User-Agent': 'Mozilla/5.0'})
-                            img = urllib.request.urlopen(req).read()
-                            f.write(img)
+                        get_pizzeria_logo()
 
                 elif ret_val == Button.ButtonFunctions.RIGHT:
                     if meal_to_show < len(pizzas_sorted) - 1:
                         meal_to_show += 1
 
-                        with open('Graphics/Images/current_restaurant.png', 'wb') as f:
-                            req = urllib.request.Request(
-                                pizzas_sorted[meal_to_show].pizzeria_info.image_link,
-                                headers={'User-Agent': 'Mozilla/5.0'})
-                            img = urllib.request.urlopen(req).read()
-                            f.write(img)
+                        get_pizzeria_logo()
+
+                elif ret_val == Button.ButtonFunctions.GTW:
+                    webbrowser.open(pizzas_sorted[meal_to_show].pizzeria_info.link, 2)
 
         # UPDATE STUFF
 
@@ -640,19 +655,47 @@ def show_results(pizzas_sorted):
         screen.blit(background_image, (0, 0))
 
         # PIZZERIA NAME
-        text = pygame.font.Font(font, 30).render(Replacer.Pl_Replacer(pizzas_sorted[meal_to_show].pizzeria_info.name), True,
+        text = pygame.font.Font(font, 30).render(Replacer.Pl_Replacer(pizzas_sorted[meal_to_show].pizzeria_info.name),
+                                                 True,
                                                  Color_Handler.Color('BLACK'))
         text_width = text.get_width()
-        screen.blit(text, ((1600 - text_width)/2, 50))
+        screen.blit(text, ((1600 - text_width) / 2, 50))
 
         # PIZZERIA LOGO
-        screen.blit(Image_Handler.get_image('current_restaurant'), (567, 100))
+        screen.blit(Image_Handler.get_image('current_restaurant'), (567, 150))
 
         # PIZZA NAME
         text = pygame.font.Font(font, 30).render(Replacer.Pl_Replacer(pizzas_sorted[meal_to_show].name), True,
                                                  Color_Handler.Color('BLACK'))
         text_width = text.get_width()
         screen.blit(text, ((1600 - text_width) / 2, 500))
+
+        # DELIVERY AND MINIMUM ORDER INFORMATION
+        if pizzas_sorted[meal_to_show].pizzeria_info.delivery == 'GRATIS':
+            tmp = 'None'
+        else:
+            tmp = pizzas_sorted[meal_to_show].pizzeria_info.delivery
+        text = 'Delivery fee: ' + Replacer.Pl_Replacer(
+            tmp) + '   ' + 'Minimum order: ' + Replacer.Pl_Replacer(
+            pizzas_sorted[meal_to_show].pizzeria_info.min_order)[5:]
+
+        text = pygame.font.Font(font, 20).render(text, True, Color_Handler.Color('BLACK'))
+        text_width = text.get_width()
+        screen.blit(text, ((1600 - text_width) / 2, 120))
+
+        # TOPPINGS
+
+        text = Replacer.Pl_Replacer(pizzas_sorted[meal_to_show].toppings)
+        text = pygame.font.Font(font, 20).render(text, True, Color_Handler.Color('BLACK'))
+        text_width = text.get_width()
+        screen.blit(text, ((1600 - text_width) / 2, 550))
+
+        # PRICE
+
+        text = 'Price: ' + Replacer.Pl_Replacer(str(pizzas_sorted[meal_to_show].price)) + '0 zl'
+        text = pygame.font.Font(font, 40).render(text, True, Color_Handler.Color('BLACK'))
+        text_width = text.get_width()
+        screen.blit(text, ((1600 - text_width) / 2, 610))
 
         for button in buttons:
             button.show(screen)
@@ -662,15 +705,10 @@ def show_results(pizzas_sorted):
         clock.tick(60)
 
 
-def program_end():
-    pass
-
-
 if __name__ == '__main__':
 
     menu = True
     main = False
-    end = False
 
     while True:
 
@@ -679,19 +717,9 @@ if __name__ == '__main__':
             if menu_end:
                 menu = False
                 main = True
-                end = False
         elif main:
             main_end, wtd = program_main(pizza_options)
             if main_end:
                 if wtd == 'Menu':
                     menu = True
                     main = False
-                    end = False
-                else:
-                    menu = False
-                    main = False
-                    end = True
-        elif end:
-            end_end = program_end()
-            if end_end:
-                pass

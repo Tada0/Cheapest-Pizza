@@ -10,7 +10,8 @@ class ButtonFunctions(Enum):
     AGAIN = 4
     LEFT = 5
     RIGHT = 6
-    EXIT = 7
+    GTW = 7
+    EXIT = 8
 
 
 class Button:
@@ -42,6 +43,10 @@ class Button:
     @staticmethod
     def button_func_ret_Right():
         return ButtonFunctions.RIGHT
+
+    @staticmethod
+    def button_func_ret_Gtw():
+        return ButtonFunctions.GTW
 
     def __init__(self, x, y, w, h, text, text_size, functionality, imgs=None):
 

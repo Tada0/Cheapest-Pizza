@@ -32,7 +32,6 @@ class PizzaOptions:
         self.address = None
         self.size = None
         self.toppings_table = [False for _ in range(24)]
-        self.only_opened = False
 
     def size_correct(self):
         if self.size > 10:
