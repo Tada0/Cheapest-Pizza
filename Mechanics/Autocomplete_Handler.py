@@ -14,6 +14,19 @@ class AutoCompleter:
         self.size = size
         self.ingredients = ingredients
 
+    def save(self):
+        global pickle_out
+
+        file_name = 'ud.acf'
+
+        try:
+            pickle_out = open(file_name, "wb")
+            pickle.dump(self, pickle_out)
+        except IOError as e:
+            print(e)
+        finally:
+            pickle_out.close()
+
     @staticmethod
     def load():
         global pickle_in
@@ -29,16 +42,3 @@ class AutoCompleter:
 
         if object_from_pickle is not None:
             return object_from_pickle
-
-    def save(self):
-        global pickle_out
-
-        file_name = 'ud.acf'
-
-        try:
-            pickle_out = open(file_name, "wb")
-            pickle.dump(self, pickle_out)
-        except IOError as e:
-            print(e)
-        finally:
-            pickle_out.close()
