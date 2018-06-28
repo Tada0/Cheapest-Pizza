@@ -13,7 +13,7 @@ class PizzaOptions:
         9: 'fet',
         10: 'czosn',
         11: 'szynk',
-        12: 'zioł',
+        12: 'oregano',
         13: 'jalapeno',
         14: 'mozzarell',
         15: 'oliwk',

@@ -39,88 +39,29 @@ def program_menu():
         # UI
         text = pygame.font.Font(font, 50).render("Find the cheapest pizza", True, Color_Handler.Color('BLACK'))
         screen.blit(text, (300, 90))
-        text = pygame.font.Font(font, 30).render("Address", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 250))
-        text = pygame.font.Font(font, 30).render("City", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 200))
-        text = pygame.font.Font(font, 30).render("Size", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1250, 200))
-        text = pygame.font.Font(font, 30).render("Toppings", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (695, 350))
-        text = pygame.font.Font(font, 30).render("cm", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1300, 250))
-        text = pygame.font.Font(font, 30).render("Searching only in currently open pizzerias", True,
-                                                 Color_Handler.Color('BLACK'))
-        screen.blit(text, (240, 750))
+        text = ['Address', 'City', 'Size', 'Toppings', 'cm', 'Searching only in currently open pizzerias']
+        text = [pygame.font.Font(font, 30).render(str, True, Color_Handler.Color('BLACK')) for str in text]
+        places = ([100, 100, 1250, 690, 1300, 240], [250, 200, 200, 350, 250, 750])
+        for x in range(6):
+            screen.blit(text[x], (places[0][x], places[1][x]))
 
         # TOPPINGS
 
-        # FIRST COLUMN
-        text = pygame.font.Font(font, 30).render("Anchois", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 400))
-        text = pygame.font.Font(font, 30).render("Artichokes", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 450))
-        text = pygame.font.Font(font, 30).render("Arugula", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 500))
-        text = pygame.font.Font(font, 30).render("Bacon", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 550))
-        text = pygame.font.Font(font, 30).render("Bell Pepper", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 600))
-        text = pygame.font.Font(font, 30).render("Camembert", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (100, 650))
-
-        # SECOND COLUMN
-        text = pygame.font.Font(font, 30).render("Capers", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (480, 400))
-        text = pygame.font.Font(font, 30).render("Chicken", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (480, 450))
-        text = pygame.font.Font(font, 30).render("Corn", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (480, 500))
-        text = pygame.font.Font(font, 30).render("Feta", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (480, 550))
-        text = pygame.font.Font(font, 30).render("Garlic", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (480, 600))
-        text = pygame.font.Font(font, 30).render("Ham", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (480, 650))
-
-        # THIRD COLUMN
-        text = pygame.font.Font(font, 30).render("Herbs", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (770, 400))
-        text = pygame.font.Font(font, 30).render("Jalapeno", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (770, 450))
-        text = pygame.font.Font(font, 30).render("Mozzarella", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (770, 500))
-        text = pygame.font.Font(font, 30).render("Olives", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (770, 550))
-        text = pygame.font.Font(font, 30).render("Onion", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (770, 600))
-        text = pygame.font.Font(font, 30).render("Pineapple", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (770, 650))
-
-        # FOURTH COLUMN
-
-        text = pygame.font.Font(font, 30).render("Portobello", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1150, 400))
-        text = pygame.font.Font(font, 30).render("Salami", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1150, 450))
-        text = pygame.font.Font(font, 30).render("Sausage", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1150, 500))
-        text = pygame.font.Font(font, 30).render("Sea Food", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1150, 550))
-        text = pygame.font.Font(font, 30).render("Tomato", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1150, 600))
-        text = pygame.font.Font(font, 30).render("Tuna", True, Color_Handler.Color('BLACK'))
-        screen.blit(text, (1150, 650))
+        text = ['Anchois', 'Artichokes', 'Arugula', 'Bacon', 'Bell Pepper', 'Camembert',
+                'Capers', 'Chicken', 'Corn', 'Feta', 'Garlic', 'Ham',
+                'Herbs', 'Jalapeno', 'Mozzarella', 'Olives', 'Onion', 'Pineapple',
+                'Portobello', 'Salami', 'Sausage', 'Sea Food', 'Tomato', 'Tuna']
+        text = [pygame.font.Font(font, 30).render(str, True, Color_Handler.Color('BLACK')) for str in text]
+        for x in range(4):
+            for y in range(6):
+                screen.blit(text[x*6+y], ([100, 480, 770, 1150][x], 400+50*y))
 
     def data_process(options):
         options.size = int(input_box3.text)
         options.city = input_box1.text
         options.address = input_box2.text
         options.toppings_table = [tick_boxes[x].active for x in range(24)]
-        if options.size_correct() and options.address_correct():
-            return True
-        else:
-            return False
+        return options.size_correct() and options.address_correct()
 
     ac = Autocomplete_Handler.AutoCompleter().load()
 
@@ -135,42 +76,7 @@ def program_menu():
     button2 = Button.Button(880, 820, 165, 58, 'Exit', 50, Button.Button.button_func_ret_Exit())
     buttons = [button1, button2]
 
-    # FIRST COLUMN
-    tick_box1 = TickBox.TickBox(400, 400, ac.ingredients[0])
-    tick_box2 = TickBox.TickBox(400, 450, ac.ingredients[1])
-    tick_box3 = TickBox.TickBox(400, 500, ac.ingredients[2])
-    tick_box4 = TickBox.TickBox(400, 550, ac.ingredients[3])
-    tick_box5 = TickBox.TickBox(400, 600, ac.ingredients[4])
-    tick_box6 = TickBox.TickBox(400, 650, ac.ingredients[5])
-
-    # SECOND COLUMN
-    tick_box7 = TickBox.TickBox(680, 400, ac.ingredients[6])
-    tick_box8 = TickBox.TickBox(680, 450, ac.ingredients[7])
-    tick_box9 = TickBox.TickBox(680, 500, ac.ingredients[8])
-    tick_box10 = TickBox.TickBox(680, 550, ac.ingredients[9])
-    tick_box11 = TickBox.TickBox(680, 600, ac.ingredients[10])
-    tick_box12 = TickBox.TickBox(680, 650, ac.ingredients[11])
-
-    # THIRD COLUMN
-    tick_box13 = TickBox.TickBox(1080, 400, ac.ingredients[12])
-    tick_box14 = TickBox.TickBox(1080, 450, ac.ingredients[13])
-    tick_box15 = TickBox.TickBox(1080, 500, ac.ingredients[14])
-    tick_box16 = TickBox.TickBox(1080, 550, ac.ingredients[15])
-    tick_box17 = TickBox.TickBox(1080, 600, ac.ingredients[16])
-    tick_box18 = TickBox.TickBox(1080, 650, ac.ingredients[17])
-
-    # FOURTH COLUMN
-    tick_box19 = TickBox.TickBox(1440, 400, ac.ingredients[18])
-    tick_box20 = TickBox.TickBox(1440, 450, ac.ingredients[19])
-    tick_box21 = TickBox.TickBox(1440, 500, ac.ingredients[20])
-    tick_box22 = TickBox.TickBox(1440, 550, ac.ingredients[21])
-    tick_box23 = TickBox.TickBox(1440, 600, ac.ingredients[22])
-    tick_box24 = TickBox.TickBox(1440, 650, ac.ingredients[23])
-
-    tick_boxes = [tick_box1, tick_box2, tick_box3, tick_box4, tick_box5, tick_box6,
-                  tick_box7, tick_box8, tick_box9, tick_box10, tick_box11, tick_box12,
-                  tick_box13, tick_box14, tick_box15, tick_box16, tick_box17, tick_box18,
-                  tick_box19, tick_box20, tick_box21, tick_box22, tick_box23, tick_box24]
+    tick_boxes = [TickBox.TickBox([400, 680, 1080, 1440][x], 400 + y * 50, ac.ingredients[x*6+y]) for x in range(4) for y in range(6)]
 
     while True:
         for event in pygame.event.get():
@@ -247,7 +153,7 @@ def program_main(pizza_options):
             if main_url == 'Wrong address':
                 print('Wrong address')
                 pygame.quit()
-                quit()
+                os._exit(0)
             elif main_url != 'https://www.pyszne.pl/':
                 print('Address found - ' + main_url)
                 break
@@ -263,8 +169,6 @@ def program_main(pizza_options):
         pizzerias_metadata = re.findall(
             r'<div class="restaurant grid"(.*?)</div>\\n\\t\\t</div>\\n\\t</div>\\n\\t</div>\\n\\n',
             str(parsed_main_url))
-        selected = 0
-        pizzerias_found = len(pizzerias_metadata)
         for metadata in pizzerias_metadata:
             chosen = Replacer.Uni_Replacer(re.search(r'<div class="open">(.*?)</div>', metadata).group(1))
             if chosen == '':
@@ -304,11 +208,7 @@ def program_main(pizza_options):
             pizzeria.image_link = 'http://' + re.search(r'<div class="restaurant-logo">\\n {2}<img src="//(.*?) alt',
                                                         str(pizzeria.parsed_url)).group(1)[:-1]
 
-        temp = []
-        for pizzeria in pizzerias:
-            if pizzeria.categories:
-                temp.append(pizzeria)
-        pizzerias = temp
+        pizzerias = [pizzeria for pizzeria in pizzerias if pizzeria.categories]
 
         # BY NOW PIZZERIAS WITH NO CORRESPONDING CATEGORIES ARE REMOVED
 
